@@ -1,40 +1,32 @@
 #!/usr/bin/env python3
-
+# ConvertToGrayscale.py
 import cv2
 
-# globals
-outputDir    = 'frames'
-
-# initialize frame count
-count = 0
-
-# get the next frame file name
-inFileName = f'{outputDir}/frame_{count:04d}.bmp'
-
-
-# load the next file
-inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
-
-while inputFrame is not None and count < 72:
-    print(f'Converting frame {count}')
-
-    # convert the image to grayscale
-    grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
+def convertFrame2Grayscale(input_buffer, output_buffer):
+    """
+    Consumer/Producer: Get frames from input buffer, convert to grayscale,
+    put converted frames in output buffer.
+    Stops when None is received (end-of-stream signal).
+    """
+    count = 0
     
-    # generate output file name
-    outFileName = f'{outputDir}/grayscale_{count:04d}.bmp'
-
-    # write output file
-    cv2.imwrite(outFileName, grayscaleFrame)
-
-    count += 1
-
-    # generate input file name for the next frame
-    inFileName = f'{outputDir}/frame_{count:04d}.bmp'
+    while True:
+        # Get frame from input buffer (blocks if empty)
+        item = input_buffer.get()
+        
+        # Check for end-of-stream signal
+        if item is None:
+            output_buffer.put(None)
+            break
+        
+        frame_num, frame = item
+        print(f'Converting frame {count}')
+        
+        # Convert to grayscale
+        grayscale_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
+        # Put converted frame in output buffer (blocks if full)
+        output_buffer.put((frame_num, grayscale_frame))
+        count += 1
     
-    # load the next frame
-    inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
-
-
-    
-    
+    print('Grayscale conversion complete')

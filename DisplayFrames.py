@@ -1,37 +1,28 @@
 #!/usr/bin/env python3
-
+# DisplayFrames.py
 import cv2
-import time
 
-# globals
-outputDir    = 'frames'
-frameDelay   = 42       # the answer to everything
-
-# initialize frame count
-count = 0
-
-# Generate the filename for the first frame 
-frameFileName = f'{outputDir}/grayscale_{count:04d}.bmp'
-
-# load the frame
-frame = cv2.imread(frameFileName)
-
-while frame is not None:
+def displayFrames(input_buffer, frame_delay=42):
+    expected_frame_num = 0
     
-    print(f'Displaying frame {count}')
-    # Display the frame in a window called "Video"
-    cv2.imshow('Video', frame)
-
-    # Wait for 42 ms and check if the user wants to quit
-    if cv2.waitKey(frameDelay) and 0xFF == ord("q"):
-        break    
+    while True:
+        item = input_buffer.get()
+        if item is None:
+            break
+        
+        frame_num, frame = item
+        
+        # Verify ordering
+        if frame_num != expected_frame_num:
+            print(f'ERROR: Expected frame {expected_frame_num}, got {frame_num}')
+        
+        print(f'Displaying frame {frame_num}')
+        cv2.imshow('Video', frame)
+        
+        if cv2.waitKey(frame_delay) & 0xFF == ord('q'):
+            break
+        
+        expected_frame_num += 1
     
-    # get the next frame filename
-    count += 1
-    frameFileName = f'{outputDir}/grayscale_{count:04d}.bmp'
-
-    # Read the next frame file
-    frame = cv2.imread(frameFileName)
-
-# make sure we cleanup the windows, otherwise we might end up with a mess
-cv2.destroyAllWindows()
+    print('Finished displaying all frames')
+    cv2.destroyAllWindows()
